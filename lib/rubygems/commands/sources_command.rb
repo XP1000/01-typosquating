@@ -7,6 +7,7 @@ require 'rubygems/local_remote_options'
 class Gem::Commands::SourcesCommand < Gem::Command
 
   include Gem::LocalRemoteOptions
+  include Gem::Text # for the levenshtein implementation
 
   def initialize
     require 'fileutils'
@@ -39,9 +40,10 @@ class Gem::Commands::SourcesCommand < Gem::Command
   end
 
   def add_source(source_uri) # :nodoc:
-    check_rubygems_https source_uri
-
     source = Gem::Source.new source_uri
+
+    check_rubygems_https source
+    check_rubygems_typo_squatting source
 
     begin
       if Gem.sources.include? source
@@ -62,13 +64,27 @@ class Gem::Commands::SourcesCommand < Gem::Command
     end
   end
 
-  def check_rubygems_https(source_uri) # :nodoc:
-    uri = URI source_uri
+  def check_rubygems_https(source) # :nodoc:
+    uri = source.uri
 
     if uri.scheme and uri.scheme.downcase == 'http' and
        uri.host.downcase == 'rubygems.org'
       question = <<-QUESTION.chomp
 https://rubygems.org is recommended for security over #{uri}
+
+Do you want to add this insecure source?
+      QUESTION
+
+      terminate_interaction 1 unless ask_yes_no question
+    end
+  end
+
+  def check_rubygems_typo_squatting(source) # :nodoc:
+    uri = source.uri
+
+    if uri.host and levenshtein_distance(uri.host.downcase, 'rubygems.org').between?(0, 4)
+      question = <<-QUESTION.chomp
+#{uri.host} is too similar to rubygems.org
 
 Do you want to add this insecure source?
       QUESTION

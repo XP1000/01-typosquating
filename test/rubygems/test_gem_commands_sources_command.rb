@@ -229,6 +229,29 @@ beta-gems.example.com is not a URI
     assert_equal '', @ui.error
   end
 
+  def test_execute_add_typo_squatting
+    @cmd.handle_options %w[--add https://rubyagems.org]
+
+    ui = Gem::MockGemUi.new("n\n")
+
+    use_ui ui do
+      assert_raises Gem::MockGemUi::TermError do
+        @cmd.execute
+      end
+    end
+
+    assert_equal [@gem_repo], Gem.sources
+
+    expected = <<-EOF.chomp
+rubyagems.org is too similar to rubygems.org
+
+Do you want to add this insecure source? [yn]
+    EOF
+
+    assert_equal expected, ui.output.rstrip
+    assert_equal '', ui.error
+  end
+
   def test_execute_clear_all
     @cmd.handle_options %w[--clear-all]
 
