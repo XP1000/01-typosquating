@@ -38,6 +38,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency(%q<rdoc>, ["~> 6.0"])
   s.add_development_dependency(%q<rake>, ["~> 12.0"])
   s.add_development_dependency(%q<minitest>, ["~> 5.0"])
-  s.add_development_dependency(%q<simplecov>, ["~> 0"])
+  s.add_development_dependency(%q<simplecov>, ["< 0.18.0"])
   s.add_development_dependency(%q<rubocop>, ["~> 0.74.0"])
 end
